@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <p >{{ menu }}</p>
+    <p >{{ url_slugify }}</p>
+    <p >{{menu|last}}</p>
+    <p >{{menu|join:" | "}}</p>
+    <h1>{{ title }}, <br> title|cut: {{ title|cut:" " }}</h1>
+    <p >{{float|divisibleby:"4"}}</p>
+    <p >{{ lst }} lst length:{{lst|length}}</p>
+    <p >{{ lst.2|upper }}</p>
+    <p >{{ set }} set length: {{set|length}}</p>
+    <p >{{ dict.key_1|upper }}</p>
+
+{% for key, value in dict.items %}
+    {{ key }}: {{ value }} <br>
+{% endfor %}
+
+{% for i in set %}
+    {{ i }}
+{% endfor %}
+<p >{{"The Main Page"|slugify}}</p>
+
+</body>
+</html>
