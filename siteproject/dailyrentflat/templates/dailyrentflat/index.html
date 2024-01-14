@@ -1,23 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ title }}</title>
-</head>
-<body>
-    <p >{{ menu|join:" | " }}</p>
-    <h1>{{ title }}</h1>
+{% extends 'base.html' %}
 
-    <ol>
-         {% for p in posts %}
-         <li>
-               <h2>{{ p.title }}</h2>
-               <p >{{ p.content }}</p>
-               <p >{{ p.id }}</p>
-               <hr>
-         </li>
-         {% endfor %}
-    </ol>
+{% block content %}
+<ul class="list-articles">
+	{% for p in posts %}
+	<li>
+		<div class="article-panel">
+		<p class="first">Город: {{p.city}}</p>
+		<p class="last">Дата: {{p.time_update|date:"d-m-Y H:i"}}</p>
+		</div>
+			<h2>{{p.title}}</h2>
+		{% autoescape off %}
+		{{p.content|linebreaks|truncatewords:45}}
+		{% endautoescape %}
+		<div class="clear"></div>
+		<p class="link-read-post"><a href="{{ p.get_absolute_url }}">Показать всё</a></p>
+	</li>
 
-</body>
-</html>
+	{% endfor %}
+</ul>
+{% endblock %}

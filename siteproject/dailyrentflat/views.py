@@ -1,31 +1,56 @@
 from django.http import HttpResponse, HttpResponseNotFound, Http404, HttpResponsePermanentRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.template.defaultfilters import slugify
 from transliterate import translit
 
-menu = ["О сайте", "Добавить статью", "Обратная связь", "Войти"]
+from .models import Announcement, Cities, TagPost
 
-data_db = [
-    {'id': 1, 'title': 'Анджелина Джоли', 'content': 'Биография Анджелины Джоли', 'is_published': True},
-    {'id': 2, 'title': 'Марго Робби', 'content': 'Биография Марго Робби', 'is_published': False},
-    {'id': 3, 'title': 'Джулия Робертс', 'content': 'Биография Джулия Робертс', 'is_published': True},
-]
+menu = [{'title': "Главная страница", 'url_name': 'home'},
+        {'title': "О сайте", 'url_name': 'about'},
+        {'title': "Добавить статью", 'url_name': 'add_page'},
+        {'title': "Обратная связь", 'url_name': 'contact'},
+        {'title': "Войти", 'url_name': 'login'},
+        ]
+
+
+
 
 def index(request):
+    # posts = Announcement.published.all()
     data = {
         'title': 'Главная страница',
         'menu': menu,
-        'posts': data_db,
-        # 'url_slugify': slugify(translit("Главная страница", 'ru', reversed=True)),
-
+        'posts': Announcement.published.all().select_related('city'),
+        'url_slugify': slugify(translit("Главная страница", 'ru', reversed=True)),
+        'city_selected': 0,
     }
     return render(request, 'dailyrentflat/index.html', context=data)
 
 
+def show_post(request, post_slug):
+    post = get_object_or_404(Announcement, slug=post_slug)
+    data = {
+        'title': post.title,
+        'menu': menu,
+        'post': post,
+        # 'city_selected': 1,
+    }
+    return render(request, 'dailyrentflat/post.html', context=data)
+
+
 def cities(request, cities_slug):
-    return HttpResponse(f"<h1>Статьи по городам</h1><p >cities_slug: {cities_slug}</p>")
+    city = get_object_or_404(Cities, slug=cities_slug)
+    posts = Announcement.published.filter(city=city.pk).select_related('city')
+    data = {
+        'title': f'{city.name}',
+        'menu': menu,
+        'posts': posts,
+        'city_selected': city.pk,
+    }
+    return render(request, 'dailyrentflat/index.html', context=data)
+
 
 
 def about(request):
@@ -36,33 +61,30 @@ def about(request):
     return render(request, 'dailyrentflat/about.html', context=data)
 
 
-def year_articles(request, year):
-    if year > 2023:  # int
-        raise Http404()  # Страница не найдена!
-    if year < 2015:
-        # return redirect('cats', 'category')  # redirect на именованный path "cats", "параметры" (slug = category).
-        # другой способ redirect разделить операции вычисления URL и непосредственно перенаправление.
-        # и передать этот маршрут и набора аргументов в функцию reverse()
-        url_redirect = reverse('cats', args=('music',))
-        # return redirect(url_redirect)
-        # или в соответствующий класс:
-        # HttpResponsePermanentRedirect для редиректа с кодом 301,
-        # HttpResponseRedirect – для редиректа с кодом 302:
-        return HttpResponsePermanentRedirect(url_redirect)
-    return HttpResponse(f'<h1>year_archive: {year}</h1>')
+def addpage(request):
+    return HttpResponse("Добавление статьи")
 
 
-def year_articles2(request, year, month):
-    if year > '2023' or month > '12':  # str
-        raise Http404()
-    return HttpResponse(f'<h1>year_archive: {year}, month: {month}</h1>')
+def contact(request):
+    return HttpResponse("Обратная связь")
 
 
-def categories_by_slug(request, cat_slug):
-    if request.GET:
-        print(request.GET)
-    return HttpResponse(f"<h1>Статьи по категориям</h1><p >slug: {cat_slug}</p>")
+def login(request):
+    return HttpResponse("Авторизация")
 
 
 def page_not_found(request, exception):
     return HttpResponseNotFound(f'<h1>Страница не найдена!</h1>')
+
+
+def show_tag_postlist(request, tag_slug):
+    tag_by_slug = get_object_or_404(TagPost, slug=tag_slug)
+    posts = tag_by_slug.tags.filter(status_announcement=Announcement.Status.PUBLISHED).select_related('city')
+    data = {
+        'title': f'Тег: {tag_by_slug.tag}',
+        'menu': menu,
+        'posts': posts,
+        'cat_selected': None,
+    }
+
+    return render(request, 'dailyrentflat/index.html', context=data)
