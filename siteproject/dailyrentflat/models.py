@@ -1,5 +1,7 @@
 from django.db import models
 from django.urls import reverse
+from django.utils.text import slugify
+from transliterate import translit
 
 
 class Cities(models.Model):
@@ -9,7 +11,7 @@ class Cities(models.Model):
     time_update = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
 
     class Meta:
-        verbose_name = 'Города'
+        verbose_name = 'Город'
         verbose_name_plural = 'Города'
 
     def get_absolute_url(self):
@@ -65,7 +67,7 @@ class Announcement(models.Model):
         return self.title
 
     class Meta:
-        verbose_name = 'Объявления'
+        verbose_name = 'Объявлениe'
         verbose_name_plural = 'Объявления'
         ordering = ['-time_create']
         indexes = [
@@ -74,3 +76,9 @@ class Announcement(models.Model):
 
     def get_absolute_url(self):
         return reverse('post', kwargs={'post_slug': self.slug})
+
+    def save(self, *args, **kwargs):  # Автозаполнение слага 1-ый вариант.
+        self.slug = slugify(translit(str(self.title), 'ru', reversed=True))
+        super().save(*args, **kwargs)
+
+

@@ -1,0 +1,12 @@
+#header, .module caption {
+    background: #3F4137;
+}
+
+div.breadcrumbs, .module caption, div #changelist-filter h2 {
+    background-color: #6A6E5D;
+}
+#content-related .module h2 {
+    background-color: #6A6E5D;
+    color: #a8e19e;
+}
+

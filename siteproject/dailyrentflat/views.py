@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.template.defaultfilters import slugify
 from transliterate import translit
 
+from .forms import AddPostForm
 from .models import Announcement, Cities, TagPost
 
 menu = [{'title': "Главная страница", 'url_name': 'home'},
@@ -13,8 +14,6 @@ menu = [{'title': "Главная страница", 'url_name': 'home'},
         {'title': "Обратная связь", 'url_name': 'contact'},
         {'title': "Войти", 'url_name': 'login'},
         ]
-
-
 
 
 def index(request):
@@ -52,7 +51,6 @@ def cities(request, cities_slug):
     return render(request, 'dailyrentflat/index.html', context=data)
 
 
-
 def about(request):
     data = {
         'title': 'About this site',
@@ -61,8 +59,39 @@ def about(request):
     return render(request, 'dailyrentflat/about.html', context=data)
 
 
-def addpage(request):
-    return HttpResponse("Добавление статьи")
+def addpage(request):  # добавление данных в бд
+    if request.method == 'POST':  # если запрос POST, сохраняем данные
+        form = AddPostForm(request.POST)  # Объект класса формы в HTML.
+        if form.is_valid():
+            cd = form.cleaned_data  # Отчищенные данные от формы в type Dic.
+            try:
+                # Объект класса модели с полями в которые будем сохранять введенные данные.
+                announcement = Announcement(
+                    title=cd['title'],
+                    content=cd['content'],
+                    city=cd['city'],
+                    status_announcement=cd['status_announcement'],
+                )
+                announcement.save()
+                #  Для отношения Many to Many получаем список (list) id выбранные tags.
+                tag_ids = request.POST.getlist("tags")
+                #  Получаем список (list) QuerySet выбранных tag_id.
+                tags = TagPost.objects.filter(id__in=tag_ids)
+                announcement.tags.set(tags)  # сохраняем данные
+                return redirect('home')
+            except:
+                form.add_error(None, 'Ошибка добавления поста')
+
+    else:
+        form = AddPostForm()
+
+    data = {
+        'title': 'Подать объявление бесплатно',
+        'menu': menu,
+        'form': form,
+    }
+
+    return render(request, 'dailyrentflat/addpage.html', data)
 
 
 def contact(request):
