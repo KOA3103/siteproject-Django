@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseNotFound, Http404, HttpResponsePermanentRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -70,8 +71,13 @@ def addpage(request):  # добавление данных в бд
                     title=cd['title'],
                     content=cd['content'],
                     city=cd['city'],
-                    status_announcement=cd['status_announcement'],
+                    location=cd['location'],
+                    address=cd['address'],
+                    price=cd['price'],
+                    security_deposit=cd['security_deposit'],
+                    status_announcement=cd['status_announcement'],  # Если в DEBUG = False, то закоментировать или удалить.
                 )
+
                 announcement.save()
                 #  Для отношения Many to Many получаем список (list) id выбранные tags.
                 tag_ids = request.POST.getlist("tags")
@@ -79,18 +85,22 @@ def addpage(request):  # добавление данных в бд
                 tags = TagPost.objects.filter(id__in=tag_ids)
                 announcement.tags.set(tags)  # сохраняем данные
                 return redirect('home')
-            except:
-                form.add_error(None, 'Ошибка добавления поста')
+            except IntegrityError as err:
+                print(err)
+                if str(err) == 'NOT NULL constraint failed: dailyrentflat_announcement.security_deposit':
+                    form.add_error('security_deposit', 'Введите залоговая сумму!')
+                elif str(err) == 'NOT NULL constraint failed: dailyrentflat_announcement.city_id':
+                    form.add_error('city', 'Выберите город!')
+                elif str(err) == 'UNIQUE constraint failed: dailyrentflat_announcement.slug':
+                    print('Заголовок м слаг уже есть в БД!')
 
     else:
         form = AddPostForm()
-
     data = {
         'title': 'Подать объявление бесплатно',
         'menu': menu,
         'form': form,
     }
-
     return render(request, 'dailyrentflat/addpage.html', data)
 
 

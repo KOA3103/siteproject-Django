@@ -4,13 +4,13 @@ from .models import Announcement, Cities, TagPost
 
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
-    prepopulated_fields = {'slug': ("title",)}  # Автозаполнение слага 2-ой вариант.
+    prepopulated_fields = {'slug': ("title",)}  # Автозаполнение слага 2-ой вариант, работает только в админ панели.
     # readonly_fields = ['slug']  # Поля только для чтения.
-    list_display = ('id', 'title', 'time_create', 'time_update', 'status_announcement', 'city', 'brief_info')
+    list_display = ('id', 'title', 'slug', 'time_create', 'time_update', 'status_announcement', 'city', 'location', 'address', 'price', 'security_deposit', 'brief_info')
     list_display_links = ('id', 'title', 'time_create', 'time_update')
     ordering = ['-time_update', '-time_create', 'title']  # Сортировка
     list_editable = ('status_announcement',)  # Должен быть именно кортеж ('status_announcement', 'city',).
-    list_per_page = 10  # Пагинация с указанием максимального числа записей на странице.
+    list_per_page = 15  # Пагинация с указанием максимального числа записей на странице.
     actions = ['set_published', 'set_draft', 'set_moderation']  # Определение пользовательских действий в админ-панели.
     search_fields = ['title', 'city__name', 'content']  # Поиск по полю title, по городам и по описанию.
     list_filter = ['city__name', 'status_announcement']  # Отображение панели фильтрации по заданным критериям.
